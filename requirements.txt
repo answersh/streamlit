@@ -3,4 +3,3 @@ plotly
 pandas
 numpy
 load_dotenv
-time

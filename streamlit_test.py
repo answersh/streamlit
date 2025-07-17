@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import numpy as np
+import plotly.express as px
+import pydeck as pdk
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # st.button 생성#########################################
 with st.container():
@@ -290,3 +295,110 @@ with st.container():
             st.error("업로드된 파일이 csv형식이 아닙니다. csv파일을 업로드하세요.")
 st.markdown("---")
 #########################################################
+
+# bar chart #############################################
+with st.container():
+    df = pd.DataFrame({
+        "과일": ["사과", "바나나", "체리", "사과", "바나나", "체리"],
+        "판매량": [10, 15, 8, 12, 18, 6],
+        "지점": ["서울", "서울", "서울", "부산", "부산", "부산"]
+    })
+    # plotly 그래프 생성
+    fig = px.bar(df, x="과일", y="판매량", color="지점", barmode="group", title="과일별 판매량")
+    
+    # Streamlit에 출력
+    st.plotly_chart(fig, use_container_width=True)
+st.markdown("---")
+#########################################################
+
+# map ###################################################
+with st.container():
+    # 서울 명소 위치
+    data = pd.DataFrame({
+        'lat': [37.5665, 37.5700, 37.5796],
+        'lon': [126.9780, 126.9920, 126.9770],
+        'place': ['시청', '동대문', '경복궁']
+    })
+    st.map(data)
+st.markdown("---")
+
+
+# mapbox ################################################
+
+with st.container():
+    st.markdown("""
+    ##### 💰api_key를 발급 : https://www.mapbox.com/
+    - mapbox : https://docs.mapbox.com/api/maps/styles/
+    - pydeck : https://deckgl.readthedocs.io/en/latest/
+    - 참고 : https://dailyheumsi.tistory.com/147
+    """)
+    MAPBOX_API_KEY = os.getenv('MAPBOX_API_KEY')
+    pdk.settings.mapbox_api_key = MAPBOX_API_KEY
+    st.pydeck_chart(pdk.Deck(
+        map_style='mapbox://styles/mapbox/streets-v12', #지도스타일
+        initial_view_state=pdk.ViewState(
+            latitude=37.5665, #초기 중심위도
+            longitude=126.9780, #초기 중심 경도
+            zoom=11, 
+            pitch=45 # 기울기
+        ),
+        layers=[
+            pdk.Layer(
+                'ScatterplotLayer',
+                data=data,
+                get_position='[lon,lat]',
+                get_color='[200,30,0,160]', # 빨간색 적용
+                get_radius=300, # 반경
+                pickable=True
+            )],
+        tooltip={'text':'{place}'}
+    ))
+st.markdown("---")
+#########################################################
+
+# cache & progress & spinner ############################
+with st.container():
+    @st.cache_data
+    def load_data(file):
+        df = pd.read_csv(file, encoding = 'cp949')
+        progress_bar = st.progress(0) 
+        for i in range(100):
+            time.sleep(0.01)
+            progress_bar.progress(i+1)
+        return df
+    
+    @st.cache_data
+    def calculate_stats(df, col):
+        mean = df[col].mean()
+        std = df[col].std()
+        return {"mean" : mean, "std" : std}
+    
+    uploaded_file = st.file_uploader("csv파일을 업로드하세요", type=['csv'])
+    
+    if uploaded_file is not None:
+        with st.spinner("데이터 로드 중.."): # 데이터 로드 중일때 보여지는 메세지
+            df = load_data(uploaded_file)
+        st.success("처리가 모두 끝났습니다!")
+        st.write("업로드된 파일의 데이터(15행만 보임):  ")
+        st.dataframe(df.head(15))
+    
+        col = st.selectbox("대상 컬럼 선택:", df.select_dtypes(include=np.number).columns)
+        stats = calculate_stats(df, col)
+    
+        st.markdown(f'''
+        ##### {col} 통계
+        - 평균: {stats["mean"]:.2f}
+        - 표준편차: {stats["std"]:.2f}
+        - 데이터:
+        ''')
+        st.dataframe(df.head())
+    else:
+        st.write("csv파일을 업로드하세요")
+
+st.markdown('---')
+#########################################################
+
+
+
+
+

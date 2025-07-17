@@ -5,6 +5,7 @@ import numpy as np
 import plotly.express as px
 import pydeck as pdk
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -107,7 +108,7 @@ with st.container():
     agree = st.checkbox("동의합니다") # 체크박스
     on = st.toggle("기능 활성화") # on/off설정
     
-    time = st.time_input("시간 선택") # 시간 선택
+    time1 = st.time_input("시간 선택") # 시간 선택
     file = st.file_uploader("파일 업로드") 
     color = st.color_picker("색상", "#00f900")
     pw = st.text_input("비밀번호", type="password")
@@ -356,6 +357,17 @@ with st.container():
 st.markdown("---")
 #########################################################
 
+# session_state  ########################################
+with st.container():
+    if 'count' not in st.session_state:
+        st.session_state.count = 0
+    if st.button("Click"):
+        st.session_state.count += 1
+    st.write(f"클릭횟수 : {st.session_state.count}번")    
+
+st.markdown('---')
+#########################################################
+
 # cache & progress & spinner ############################
 with st.container():
     @st.cache_data
@@ -397,7 +409,6 @@ with st.container():
 
 st.markdown('---')
 #########################################################
-
 
 
 

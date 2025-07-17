@@ -5,6 +5,7 @@ import numpy as np
 import plotly.express as px
 import pydeck as pdk
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
